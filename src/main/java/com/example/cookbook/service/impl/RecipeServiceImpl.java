@@ -6,6 +6,7 @@ import com.example.cookbook.model.RecipeHistory;
 import com.example.cookbook.repository.RecipeHistoryRepository;
 import com.example.cookbook.repository.RecipeRepository;
 import com.example.cookbook.service.RecipeService;
+import exception.ParentNotAllowedException;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -53,16 +54,25 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
-    public void addChildToParent(String recipeName, String parentRecipeName) {
+    public void addChildToParent(String recipeName, String parentRecipeName) throws ParentNotAllowedException {
         Recipe recipe = getByName(recipeName);
-        recipe.setParentRecipe(getByName(parentRecipeName));
+        Recipe parentRecipe = getByName(parentRecipeName);
+        Recipe parent = parentRecipe.getParentRecipe();
+        while (parent != null) {
+            if (parent.equals(recipe)) {
+                throw new ParentNotAllowedException("You cannot add child recipe '" + recipe.getName()
+                        + "' to parent recipe '" + parentRecipe.getName() + "'");
+            }
+            parent = parent.getParentRecipe();
+        }
+        recipe.setParentRecipe(parentRecipe);
         recipeHistoryRepository.save(recipeHistoryMapper.getHistoryEntity(recipe));
         recipeRepository.save(recipe);
     }
 
     @Override
-    public List<Recipe> getAll(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("name"));
+    public List<Recipe> getAll(int page, int size, String sortBy) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
         return recipeRepository.findAll(pageable).getContent();
     }
 
