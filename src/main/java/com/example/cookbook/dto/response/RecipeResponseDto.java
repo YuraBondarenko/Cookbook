@@ -9,4 +9,5 @@ public class RecipeResponseDto {
     private LocalDate date;
     private String name;
     private String description;
+    private String parentRecipeName;
 }

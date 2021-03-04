@@ -18,6 +18,9 @@ public class RecipeMapper implements MapperToDto<Recipe, RecipeResponseDto>,
         recipeResponseDto.setName(entity.getName());
         recipeResponseDto.setDescription(entity.getDescription());
         recipeResponseDto.setDate(entity.getDate().toLocalDate());
+        if (entity.getParentRecipe() != null) {
+            recipeResponseDto.setParentRecipeName(entity.getParentRecipe().getName());
+        }
         return recipeResponseDto;
     }
 

@@ -31,6 +31,9 @@ public class RecipeHistoryMapper implements HistoryMapperToEntity<RecipeHistory,
         dto.setDate(entity.getDate().toLocalDate());
         dto.setName(entity.getName());
         dto.setId(entity.getId());
+        if (entity.getParentRecipe() != null) {
+            dto.setParentRecipeName(entity.getParentRecipe().getName());
+        }
         return dto;
     }
 }

@@ -7,6 +7,7 @@ import com.example.cookbook.mapper.impl.RecipeMapper;
 import com.example.cookbook.mapper.impl.history.RecipeHistoryMapper;
 import com.example.cookbook.model.Recipe;
 import com.example.cookbook.service.RecipeService;
+import exception.ParentNotAllowedException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -31,8 +32,9 @@ public class RecipeController {
     @GetMapping
     public List<RecipeResponseDto> getAll(
             @RequestParam(required = false, defaultValue = "0") int page,
-            @RequestParam(required = false, defaultValue = "10") int limit) {
-        return recipeService.getAll(page, limit).stream()
+            @RequestParam(required = false, defaultValue = "10") int limit,
+            @RequestParam(required = false, defaultValue = "name") String sortBy) {
+        return recipeService.getAll(page, limit, sortBy).stream()
                 .map(recipeMapper::getDto)
                 .collect(Collectors.toList());
     }
@@ -65,7 +67,7 @@ public class RecipeController {
 
     @PutMapping
     public void addChildToParent(@RequestParam String childName,
-                                 @RequestParam String parentName) {
+                                 @RequestParam String parentName) throws ParentNotAllowedException {
         recipeService.addChildToParent(childName, parentName);
     }
 

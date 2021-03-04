@@ -10,4 +10,5 @@ public class RecipeHistoryResponseDto {
     private LocalDate date;
     private String name;
     private String description;
+    private String parentRecipeName;
 }
