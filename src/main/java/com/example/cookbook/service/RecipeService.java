@@ -14,7 +14,8 @@ public interface RecipeService {
 
     void saveChild(Recipe recipe, String parentRecipeName);
 
-    void addChildToParent(String recipeName, String parentRecipeName) throws ParentNotAllowedException;
+    void addChildToParent(String recipeName, String parentRecipeName)
+            throws ParentNotAllowedException;
 
     void update(Recipe recipe);
 

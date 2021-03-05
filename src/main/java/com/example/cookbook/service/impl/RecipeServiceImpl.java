@@ -9,6 +9,7 @@ import com.example.cookbook.service.RecipeService;
 import exception.ParentNotAllowedException;
 import java.time.LocalDateTime;
 import java.util.List;
+import javax.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +30,8 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Override
     public Recipe getByName(String name) {
-        return recipeRepository.getByName(name);
+        return recipeRepository.getByName(name).orElseThrow(()
+                -> new EntityNotFoundException("Cannot find recipe with name" + name));
     }
 
     @Override
@@ -54,14 +56,16 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
-    public void addChildToParent(String recipeName, String parentRecipeName) throws ParentNotAllowedException {
+    public void addChildToParent(String recipeName, String parentRecipeName)
+            throws ParentNotAllowedException {
         Recipe recipe = getByName(recipeName);
         Recipe parentRecipe = getByName(parentRecipeName);
         Recipe parent = parentRecipe.getParentRecipe();
         while (parent != null) {
             if (parent.equals(recipe)) {
-                throw new ParentNotAllowedException("You cannot add child recipe '" + recipe.getName()
-                        + "' to parent recipe '" + parentRecipe.getName() + "'");
+                throw new ParentNotAllowedException("Cannot add parent recipe '"
+                        + parentRecipe.getName()
+                        + "' to child recipe '" + recipe.getName() + "'");
             }
             parent = parent.getParentRecipe();
         }
@@ -78,7 +82,7 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Override
     public void delete(Long id) {
-        recipeRepository.delete(getById(id));
+        recipeRepository.deleteById(id);
     }
 
     @Override
