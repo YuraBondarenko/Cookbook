@@ -10,7 +10,10 @@ import com.example.cookbook.service.RecipeService;
 import exception.ParentNotAllowedException;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,57 +33,74 @@ public class RecipeController {
     private final RecipeHistoryMapper recipeHistoryMapper;
 
     @GetMapping
-    public List<RecipeResponseDto> getAll(
+    public ResponseEntity<List<RecipeResponseDto>> getAll(
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int limit,
             @RequestParam(required = false, defaultValue = "name") String sortBy) {
-        return recipeService.getAll(page, limit, sortBy).stream()
+        List<RecipeResponseDto> recipes = recipeService.getAll(page, limit, sortBy).stream()
                 .map(recipeMapper::getDto)
                 .collect(Collectors.toList());
+        return new ResponseEntity<>(recipes, HttpStatus.OK);
     }
 
     @GetMapping("/history/{name}")
-    public List<RecipeHistoryResponseDto> getHistoryByName(
+    public ResponseEntity<List<RecipeHistoryResponseDto>> getHistoryByName(
             @PathVariable String name,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int limit) {
-        return recipeService.getHistory(page, limit, name).stream()
+        List<RecipeHistoryResponseDto> recipesHistory = recipeService
+                .getHistory(page, limit, name).stream()
                 .map(recipeHistoryMapper::getDto)
                 .collect(Collectors.toList());
+        return new ResponseEntity<>(recipesHistory, HttpStatus.OK);
     }
 
     @GetMapping("/{name}")
-    public RecipeResponseDto getByName(@PathVariable String name) {
-        return recipeMapper.getDto(recipeService.getByName(name));
+    public ResponseEntity<RecipeResponseDto> getByName(@PathVariable String name) {
+        return new ResponseEntity<>(recipeMapper.getDto(recipeService.getByName(name)),
+                HttpStatus.OK);
     }
 
     @PostMapping
-    public void save(@RequestBody RecipeRequestDto recipeRequestDto) {
-        recipeService.save(recipeMapper.getEntity(recipeRequestDto));
+    public ResponseEntity<RecipeResponseDto> save(
+            @RequestBody @Valid RecipeRequestDto recipeRequestDto) {
+        Recipe recipe = recipeMapper.getEntity(recipeRequestDto);
+        recipeService.save(recipe);
+        return new ResponseEntity<>(recipeMapper.getDto(recipe),
+                HttpStatus.CREATED);
     }
 
     @PostMapping("/{name}")
-    public void saveChild(@PathVariable String name,
-                          @RequestBody RecipeRequestDto recipeRequestDto) {
-        recipeService.saveChild(recipeMapper.getEntity(recipeRequestDto), name);
+    public ResponseEntity<RecipeResponseDto> saveChild(
+            @PathVariable String name,
+            @RequestBody @Valid RecipeRequestDto recipeRequestDto) {
+        Recipe recipe = recipeMapper.getEntity(recipeRequestDto);
+        recipeService.saveChild(recipe, name);
+        return new ResponseEntity<>(recipeMapper.getDto(recipe), HttpStatus.OK);
     }
 
     @PutMapping
-    public void addChildToParent(@RequestParam String childName,
-                                 @RequestParam String parentName) throws ParentNotAllowedException {
+    public ResponseEntity<RecipeResponseDto> addChildToParent(
+            @RequestParam String childName,
+            @RequestParam String parentName) throws ParentNotAllowedException {
         recipeService.addChildToParent(childName, parentName);
+        return new ResponseEntity<>(recipeMapper.getDto(recipeService.getByName(childName)),
+                HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
-    public void update(@PathVariable Long id,
-                       @RequestBody RecipeRequestDto recipeRequestDto) {
+    public ResponseEntity<RecipeResponseDto> update(
+            @PathVariable Long id,
+            @RequestBody @Valid RecipeRequestDto recipeRequestDto) {
         Recipe entity = recipeMapper.getEntity(recipeRequestDto);
         entity.setId(id);
         recipeService.update(entity);
+        return new ResponseEntity<>(recipeMapper.getDto(entity), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<RecipeResponseDto> delete(@PathVariable Long id) {
         recipeService.delete(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
